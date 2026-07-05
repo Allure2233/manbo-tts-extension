@@ -1,0 +1,7 @@
+*.mp3
+*.zip
+*.py
+manbo_30s.txt
+manbo_training_text.txt
+.DS_Store
+Thumbs.db
