@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "曼波配音 - 鼠标悬停朗读",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "鼠标划过文字时自动用曼波语音朗读。支持火山引擎直连。",
   "browser_specific_settings": {
     "gecko": {
@@ -18,11 +18,29 @@
     "https://api.milorapart.top/*",
     "https://openspeech.bytedance.com/*"
   ],
-  "background": { "scripts": ["background.js"] },
-  "content_scripts": [{ "matches": ["<all_urls>"], "js": ["content.js"], "all_frames": true }],
-  "action": {
-    "default_popup": "popup.html", "default_title": "曼波配音",
-    "default_icon": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  "background": {
+    "service_worker": "background.js",
+    "scripts": ["background.js"]
   },
-  "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "all_frames": true
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "曼波配音",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
 }
