@@ -24,18 +24,23 @@
     input[type=range]::-moz-range-thumb{width:16px;height:16px;background:#667eea;border-radius:50%;cursor:pointer;border:none}
     input[type=text]{width:100%;padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#ccc;font-size:11px;outline:none}
     input[type=text]:focus{border-color:#667eea}
-    .status{display:flex;align-items:center;gap:6px;margin:10px 0;font-size:11px;color:#aaa}
+    .voice-row{display:flex;gap:6px;margin-bottom:10px}
+    .voice-btn{flex:1;padding:10px 6px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:#999;cursor:pointer;font-size:12px;text-align:center;transition:0.2s}
+    .voice-btn.active{border-color:#667eea;background:rgba(102,126,234,0.15);color:#aabbf0;font-weight:600}
+    .voice-btn:hover{background:rgba(255,255,255,0.1)}
+    .voice-btn .icon{font-size:22px;display:block;margin-bottom:3px}
+    .status{display:flex;align-items:center;gap:6px;margin:8px 0;font-size:11px;color:#aaa}
     .dot{width:7px;height:7px;border-radius:50%;background:#4caf50;animation:pulse 2s infinite}
     .dot.off{background:#666;animation:none}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-    .btn{display:block;width:100%;padding:7px;border:1px solid rgba(102,126,234,0.3);background:rgba(102,126,234,0.1);color:#8899ee;border-radius:8px;cursor:pointer;font-size:12px;transition:0.2s;margin-top:6px}
-    .btn:hover{background:rgba(102,126,234,0.2)}
-    .section-title{font-size:11px;color:#667eea;font-weight:600;margin:10px 0 6px;cursor:pointer}
+    .section-title{font-size:11px;color:#667eea;font-weight:600;margin:8px 0 6px;cursor:pointer}
     .section-title:after{content:' ▼';font-size:9px}
     .section-title.collapsed:after{content:' ▶'}
     .collapsed+.section-body{display:none}
     .section-body{margin-bottom:6px}
     .hint{font-size:10px;color:#555;margin-top:2px}
+    .btn{display:block;width:100%;padding:7px;border:1px solid rgba(102,126,234,0.3);background:rgba(102,126,234,0.1);color:#8899ee;border-radius:8px;cursor:pointer;font-size:12px;transition:0.2s;margin-top:6px}
+    .btn:hover{background:rgba(102,126,234,0.2)}
     .footer{text-align:center;padding:4px 18px 12px;font-size:10px;color:#555}
   </style>
 </head>
@@ -46,28 +51,31 @@
       <span class="label">🔊 悬停朗读</span>
       <label class="switch"><input type="checkbox" id="tb" checked><span class="slider-bg"></span></label>
     </div>
+
+    <!-- 音色选择 -->
+    <div class="voice-row">
+      <button class="voice-btn active" data-voice="manbo"><span class="icon">🎙️</span>曼波</button>
+      <button class="voice-btn" data-voice="jelpeta"><span class="icon">🎤</span>杰尔佩塔</button>
+    </div>
+
     <div class="status"><span class="dot" id="sd"></span><span id="st">已启用</span></div>
 
     <div class="setting"><div class="title">🔉 音量 <span id="volVal">100%</span></div><input type="range" id="vol" min="10" max="100" value="100" step="5"></div>
     <div class="setting"><div class="title">⏩ 语速 <span id="spdVal">1.0x</span></div><input type="range" id="spd" min="50" max="200" value="100" step="5"></div>
     <div class="setting"><div class="title">⏱️ 悬停延迟 <span id="dlyVal">300ms</span></div><input type="range" id="dly" min="100" max="1000" value="300" step="50"></div>
 
-    <div class="section-title" id="volcTitle">⚡ 火山引擎（可选）</div>
+    <div class="section-title" id="volcTitle">⚡ 火山引擎配置</div>
     <div class="section-body" id="volcBody">
       <div class="setting">
         <div class="title">API Key</div>
         <input type="text" id="volcKey" placeholder="粘贴 x-api-key">
       </div>
-      <div class="setting">
-        <div class="title">音色 ID</div>
-        <input type="text" id="volcVoice" placeholder="粘贴克隆音色 ID">
-      </div>
-      <div class="hint">填了自动直连，没填走中转站</div>
+      <div class="hint">填了走火山引擎，没填走中转站（仅限曼波）</div>
     </div>
 
     <button class="btn" id="test">🔊 测试朗读</button>
   </div>
-  <div class="footer">曼波配音 v2.3</div>
+  <div class="footer">曼波配音 v2.4</div>
   <script src="popup.js"></script>
 </body>
 </html>

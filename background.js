@@ -1,20 +1,34 @@
-// 曼波配音 - 后台：火山引擎优先，失败自动回退中转站
+// 曼波配音 - 后台：多音色 + 火山引擎优先 + 中转站兜底
 'use strict';
 
 const bAPI = typeof browser !== 'undefined' ? browser : chrome;
 const MANBO_API = 'https://api.milorapart.top/apis/mbAIsc';
 const VOLCANO_API = 'https://openspeech.bytedance.com/api/v1/tts';
 let lastSpeakTime = 0;
-let volcanoKey = '', volcanoVoice = '';
+let volcanoKey = '', volcanoVoice = 'S_TvzAcVZ72', currentVoice = 'manbo';
 
-bAPI.storage.local.get(['volcano_key', 'volcano_voice'], r => {
+// 音色表
+const VOICES = {
+  manbo:    { name: '曼波',    voiceId: 'S_TvzAcVZ72' },
+  jelpeta:  { name: '杰尔佩塔', voiceId: 'S_6lXkcVZ72' }
+};
+
+console.log('[MB] 后台就绪');
+
+bAPI.storage.local.get(['volcano_key', 'volcano_voice', 'current_voice'], r => {
   if (r.volcano_key) volcanoKey = r.volcano_key;
-  if (r.volcano_voice) volcanoVoice = r.volcano_voice;
-  console.log('[MB] 火山:', volcanoKey ? '已配' : '未配 | 中转站');
+  if (r.current_voice) currentVoice = r.current_voice;
+  volcanoVoice = VOICES[currentVoice]?.voiceId || VOICES.manbo.voiceId;
+  console.log('[MB] 音色:', currentVoice, volcanoKey ? '火山引擎' : '中转站');
 });
+
 bAPI.storage.onChanged.addListener(ch => {
   if (ch.volcano_key) volcanoKey = ch.volcano_key.newValue || '';
-  if (ch.volcano_voice) volcanoVoice = ch.volcano_voice.newValue || '';
+  if (ch.current_voice) {
+    currentVoice = ch.current_voice.newValue || 'manbo';
+    volcanoVoice = VOICES[currentVoice]?.voiceId || VOICES.manbo.voiceId;
+    console.log('[MB] 切换音色:', currentVoice, volcanoVoice);
+  }
 });
 
 bAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -26,13 +40,15 @@ bAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 async function fetchAudio(text) {
-  // 优先火山引擎
+  // 火山引擎优先
   if (volcanoKey && volcanoVoice) {
     const r = await fetchVolcano(text);
     if (r.success) return r;
-    console.log('[MB] 火山失败，回退中转站:', r.error);
+    console.log('[MB] 火山失败，回退:', r.error);
   }
-  return fetchManbo(text);
+  // 中转站兜底（仅限曼波）
+  if (currentVoice === 'manbo') return fetchManbo(text);
+  return { success: false, error: '火山引擎失败，中转站仅支持曼波' };
 }
 
 async function fetchManbo(text) {
