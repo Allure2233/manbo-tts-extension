@@ -1,44 +1,77 @@
-// popup.js - 简洁版
+// popup.js - 三引擎配置
 'use strict';
 const bAPI = typeof browser !== 'undefined' ? browser : chrome;
 const tb = document.getElementById('tb'), sd = document.getElementById('sd'), st = document.getElementById('st'), test = document.getElementById('test');
 const vol = document.getElementById('vol'), spd = document.getElementById('spd'), dly = document.getElementById('dly');
 const volVal = document.getElementById('volVal'), spdVal = document.getElementById('spdVal'), dlyVal = document.getElementById('dlyVal');
-const mimoKey = document.getElementById('mimoKey'), uploadArea = document.getElementById('uploadArea'), voiceFile = document.getElementById('voiceFile');
+const volcKey = document.getElementById('volcKey'), mimoPort = document.getElementById('mimoPort');
+const engBtns = document.querySelectorAll('.eng-btn[data-engine]');
+const voiceBtns = document.querySelectorAll('.eng-btn[data-voice]');
+let currentEngine = 'mimo', currentVoice = 'manbo';
 
 function sg(k) { return new Promise(r => { try { const v = bAPI.storage.local.get(k); if (v && typeof v.then === 'function') { v.then(r).catch(() => r({})); return; } } catch (_) {} try { bAPI.storage.local.get(k, v => r(v || {})); } catch (_) { r({}); } }); }
 function ss(o) { return new Promise(r => { try { const v = bAPI.storage.local.set(o); if (v && typeof v.then === 'function') { v.then(r).catch(r); return; } } catch (_) {} try { bAPI.storage.local.set(o, r); } catch (_) { r(); } }); }
 function sm(m) { return new Promise(r => { try { const v = bAPI.runtime.sendMessage(m); if (v && typeof v.then === 'function') { v.then(r).catch(() => r(null)); return; } } catch (_) {} try { bAPI.runtime.sendMessage(m, v => r(v || null)); } catch (_) { r(null); } }); }
 
 // 加载
-sg(['enabled', 'mimo_key', 'mimo_voice_b64', 'volume', 'speed', 'delay']).then(r => {
+sg(['enabled', 'engine', 'volcano_key', 'volcano_voice', 'mimo_port', 'volume', 'speed', 'delay']).then(r => {
   tb.checked = r.enabled !== undefined ? r.enabled : true;
-  if (r.mimo_key) mimoKey.value = r.mimo_key;
-  if (r.mimo_voice_b64) { uploadArea.textContent = '✅ 声音已上传'; uploadArea.classList.add('done'); }
+  currentEngine = r.engine || 'mimo';
+  currentVoice = r.volcano_voice || 'manbo';
+  if (r.volcano_key) volcKey.value = r.volcano_key;
+  mimoPort.value = r.mimo_port || 3000;
   vol.value = r.volume || 100; spd.value = r.speed || 100; dly.value = r.delay || 300;
-  updateUI(tb.checked); updateLabels();
+  setEngineUI(currentEngine); setVoiceUI(currentVoice); updateUI(tb.checked); updateLabels();
 });
 
 // 开关
 tb.addEventListener('change', () => { ss({ enabled: tb.checked }); updateUI(tb.checked); });
 
-// API Key
-mimoKey.addEventListener('change', () => ss({ mimo_key: mimoKey.value.trim() }));
+// 引擎切换
+engBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentEngine = btn.dataset.engine;
+    ss({ engine: currentEngine });
+    setEngineUI(currentEngine);
+  });
+});
 
-// 上传声音
-uploadArea.addEventListener('click', () => voiceFile.click());
-voiceFile.addEventListener('change', () => {
-  const file = voiceFile.files[0];
-  if (!file) return;
-  uploadArea.textContent = '处理中...';
-  const reader = new FileReader();
-  reader.onload = () => {
-    ss({ mimo_voice_b64: reader.result });
-    uploadArea.textContent = '✅ ' + file.name;
-    uploadArea.classList.add('done');
-  };
-  reader.onerror = () => { uploadArea.textContent = '❌ 失败'; };
-  reader.readAsDataURL(file);
+function setEngineUI(e) {
+  engBtns.forEach(b => b.classList.toggle('active', b.dataset.engine === e));
+  const names = { mimo: 'MiMo 本地', volcano: '火山引擎', manbo: '中转站' };
+  if (tb.checked) st.textContent = '已启用 · ' + names[e];
+  // 显示/隐藏对应配置
+  document.getElementById('mimoCfg').style.display = e === 'mimo' ? '' : 'none';
+  document.getElementById('mimoBody').style.display = e === 'mimo' ? '' : 'none';
+  document.getElementById('volcCfg').style.display = e === 'volcano' ? '' : 'none';
+  document.getElementById('volcBody').style.display = e === 'volcano' ? '' : 'none';
+  document.getElementById('manboHint').style.display = e === 'manbo' ? '' : 'none';
+}
+
+// 音色切换
+voiceBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentVoice = btn.dataset.voice;
+    ss({ volcano_voice: currentVoice });
+    setVoiceUI(currentVoice);
+  });
+});
+
+function setVoiceUI(v) {
+  voiceBtns.forEach(b => b.classList.toggle('active', b.dataset.voice === v));
+}
+
+// 配置保存
+volcKey.addEventListener('change', () => ss({ volcano_key: volcKey.value.trim() }));
+mimoPort.addEventListener('change', () => ss({ mimo_port: parseInt(mimoPort.value) || 3000 }));
+
+// 折叠
+document.querySelectorAll('.section-title').forEach(title => {
+  title.addEventListener('click', () => {
+    title.classList.toggle('collapsed');
+    const body = title.nextElementSibling;
+    if (body) body.style.display = title.classList.contains('collapsed') ? 'none' : '';
+  });
 });
 
 // 滑块
@@ -51,7 +84,7 @@ voiceFile.addEventListener('change', () => {
 function updateLabels() { volVal.textContent = vol.value + '%'; spdVal.textContent = (spd.value / 100).toFixed(2) + 'x'; dlyVal.textContent = dly.value + 'ms'; }
 
 function updateUI(en) {
-  if (en) { sd.className = 'dot'; st.textContent = '已启用'; } else { sd.className = 'dot off'; st.textContent = '已暂停'; }
+  if (en) { sd.className = 'dot'; } else { sd.className = 'dot off'; st.textContent = '已暂停'; }
 }
 
 // 测试
