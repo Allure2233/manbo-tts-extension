@@ -1,29 +1,24 @@
-// 曼波配音 - 三引擎：本地 MiMo + 火山引擎 + 中转站
+// 曼波配音 - 三引擎 + MiMo 声音上传
 'use strict';
 const bAPI = typeof browser !== 'undefined' ? browser : chrome;
-const MIMO_LOCAL = 'http://localhost:3000/api/tts';
+const MIMO_LOCAL = 'http://localhost';
 const VOLCANO_API = 'https://openspeech.bytedance.com/api/v1/tts';
 const MANBO_API = 'https://api.milorapart.top/apis/mbAIsc';
 let lastSpeakTime = 0;
 
-// 配置
 let engine = 'mimo';
 let volcanoKey = '', volcanoVoice = 'S_TvzAcVZ72';
-let mimoPort = 3000;
-
-const VOLCANO_VOICES = {
-  manbo: { name: '曼波', id: 'S_TvzAcVZ72' },
-  jelpeta: { name: '杰尔佩塔', id: 'S_6lXkcVZ72' }
-};
+let mimoPort = 3000, mimoVoiceB64 = '';
 
 console.log('[MB] 后台就绪');
 
-bAPI.storage.local.get(['engine', 'volcano_key', 'volcano_voice', 'mimo_port'], r => {
+bAPI.storage.local.get(['engine', 'volcano_key', 'volcano_voice', 'mimo_port', 'mimo_voice_b64'], r => {
   if (r.engine) engine = r.engine;
   if (r.volcano_key) volcanoKey = r.volcano_key;
   if (r.volcano_voice) volcanoVoice = r.volcano_voice;
   if (r.mimo_port) mimoPort = r.mimo_port;
-  console.log('[MB] 引擎:', engine);
+  if (r.mimo_voice_b64) mimoVoiceB64 = r.mimo_voice_b64;
+  console.log('[MB] 引擎:', engine, '| 声音:', mimoVoiceB64 ? '已上传' : '默认');
 });
 
 bAPI.storage.onChanged.addListener(ch => {
@@ -31,6 +26,7 @@ bAPI.storage.onChanged.addListener(ch => {
   if (ch.volcano_key) volcanoKey = ch.volcano_key.newValue || '';
   if (ch.volcano_voice) volcanoVoice = ch.volcano_voice.newValue || 'S_TvzAcVZ72';
   if (ch.mimo_port) mimoPort = ch.mimo_port.newValue || 3000;
+  if (ch.mimo_voice_b64) mimoVoiceB64 = ch.mimo_voice_b64.newValue || '';
 });
 
 bAPI.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -46,40 +42,40 @@ async function fetchAudio(text) {
   if (now - lastSpeakTime < 500) return { success: false, reason: 'throttled' };
   lastSpeakTime = now;
 
-  // 按引擎优先级调用
   if (engine === 'mimo') {
     const r = await fetchMiMo(text);
     if (r.success) return r;
     console.warn('[MB] MiMo 失败:', r.error);
-    // 自动回退
     if (volcanoKey) { const r2 = await fetchVolcano(text); if (r2.success) return r2; }
     return fetchManbo(text);
   }
-
   if (engine === 'volcano') {
     if (!volcanoKey) return fetchManbo(text);
     const r = await fetchVolcano(text);
     if (r.success) return r;
-    console.warn('[MB] 火山失败:', r.error);
     return fetchManbo(text);
   }
-
   return fetchManbo(text);
 }
 
 // ====== 本地 MiMo TTS Studio ======
 async function fetchMiMo(text) {
   try {
-    const r = await fetch(`http://localhost:${mimoPort}/api/tts`, {
+    const body = {
+      model: mimoVoiceB64 ? 'mimo-v2.5-tts-voiceclone' : 'mimo-v2.5-tts',
+      text: text
+    };
+    if (mimoVoiceB64) {
+      body.voiceAudio = mimoVoiceB64;
+    }
+    const r = await fetch(`${MIMO_LOCAL}:${mimoPort}/api/tts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'mimo-v2.5-tts-voiceclone', text, voiceAudio: '' })
+      body: JSON.stringify(body)
     });
     if (!r.ok) return { success: false, error: `HTTP ${r.status}` };
     const blob = await r.blob();
-    if (blob.size > 0) {
-      return { success: true, audioUrl: URL.createObjectURL(blob) };
-    }
+    if (blob.size > 0) return { success: true, audioUrl: URL.createObjectURL(blob) };
     return { success: false, error: '空音频' };
   } catch (e) { return { success: false, error: e.message }; }
 }

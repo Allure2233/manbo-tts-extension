@@ -33,6 +33,10 @@
     input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:rgba(255,255,255,0.12);border-radius:4px;outline:none}
     input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:#667eea;border-radius:50%;cursor:pointer}
     input[type=range]::-moz-range-thumb{width:16px;height:16px;background:#667eea;border-radius:50%;cursor:pointer;border:none}
+    .upload-area{border:1px dashed rgba(255,255,255,0.2);border-radius:8px;padding:14px;text-align:center;cursor:pointer;font-size:12px;color:#888;margin-bottom:8px;transition:0.2s}
+    .upload-area:hover{border-color:#667eea;background:rgba(102,126,234,0.05)}
+    .upload-area.done{border-color:#4caf50;color:#4caf50}
+    .upload-area .file-name{font-size:10px;color:#666;margin-top:4px}
     .section-title{font-size:11px;color:#667eea;font-weight:600;margin:8px 0 6px;cursor:pointer}
     .section-title:after{content:' ▼';font-size:9px}
     .section-title.collapsed:after{content:' ▶'}
@@ -62,39 +66,50 @@
     <div class="status"><span class="dot" id="sd"></span><span id="st">已启用</span></div>
 
     <!-- MiMo 配置 -->
-    <div class="section-title" id="mimoCfg">🤖 MiMo TTS Studio 配置</div>
-    <div class="section-body" id="mimoBody">
-      <div class="setting">
-        <div class="title">端口</div>
-        <input type="text" id="mimoPort" placeholder="3000">
+    <div id="mimoSection">
+      <div class="section-title">🤖 MiMo TTS Studio 配置</div>
+      <div class="section-body">
+        <div class="setting">
+          <div class="title">端口</div>
+          <input type="text" id="mimoPort" placeholder="3000">
+        </div>
+        <div class="setting">
+          <div class="title">克隆声音（上传 MP3/WAV）</div>
+          <div class="upload-area" id="uploadArea">📁 点击上传声音文件</div>
+          <input type="file" id="voiceFile" accept="audio/*" style="display:none">
+          <div class="hint">上传后会用这个声音朗读，不上传用默认曼波声音</div>
+        </div>
       </div>
-      <div class="hint">确保 MiMo TTS Studio 已运行<br>先在网页端克隆声音，再用扩展朗读</div>
     </div>
 
     <!-- 火山引擎配置 -->
-    <div class="section-title" id="volcCfg">☁️ 火山引擎配置</div>
-    <div class="section-body" id="volcBody">
-      <div class="setting">
-        <div class="title">API Key</div>
-        <input type="text" id="volcKey" placeholder="粘贴 x-api-key">
-      </div>
-      <div class="setting">
-        <div class="title">音色</div>
-        <div class="eng-row">
-          <button class="eng-btn active" data-voice="manbo"><span class="icon">🎙️</span>曼波</button>
-          <button class="eng-btn" data-voice="jelpeta"><span class="icon">🎤</span>杰尔佩塔</button>
+    <div id="volcSection" style="display:none">
+      <div class="section-title">☁️ 火山引擎配置</div>
+      <div class="section-body">
+        <div class="setting">
+          <div class="title">API Key</div>
+          <input type="text" id="volcKey" placeholder="粘贴 x-api-key">
+        </div>
+        <div class="setting">
+          <div class="title">音色</div>
+          <div class="eng-row">
+            <button class="eng-btn active" data-voice="manbo"><span class="icon">🎙️</span>曼波</button>
+            <button class="eng-btn" data-voice="jelpeta"><span class="icon">🎤</span>杰尔佩塔</button>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- 中转站 -->
-    <div class="hint" id="manboHint">🌐 中转站无需配置，每天 50 次限制</div>
+    <div id="manboSection" style="display:none">
+      <div class="hint">🌐 中转站无需配置，每天 50 次限制</div>
+    </div>
 
     <div class="divider"></div>
 
     <!-- 通用设置 -->
-    <div class="section-title" id="genCfg">⚙️ 通用设置</div>
-    <div class="section-body" id="genBody">
+    <div class="section-title">⚙️ 通用设置</div>
+    <div class="section-body">
       <div class="setting"><div class="title">🔉 音量 <span id="volVal">100%</span></div><input type="range" id="vol" min="10" max="100" value="100" step="5"></div>
       <div class="setting"><div class="title">⏩ 语速 <span id="spdVal">1.0x</span></div><input type="range" id="spd" min="50" max="200" value="100" step="5"></div>
       <div class="setting"><div class="title">⏱️ 悬停延迟 <span id="dlyVal">300ms</span></div><input type="range" id="dly" min="100" max="1000" value="300" step="50"></div>
