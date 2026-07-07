@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "曼波配音 - 鼠标悬停朗读",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "鼠标划过文字时自动用曼波语音朗读。支持火山引擎直连。",
   "browser_specific_settings": {
     "gecko": {
